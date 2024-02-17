@@ -11,6 +11,7 @@
 	export let selectable: boolean = false;
 	export let selected: boolean = true;
 	export let readonly: boolean = false;
+	export let draggingDisabled: boolean = false;
 
 	const dispatch = createEventDispatcher<{ selected: boolean }>();
 
@@ -42,18 +43,18 @@
 <div class="code-line text-sm" role="group" on:contextmenu|preventDefault>
 	<div class="code-line__numbers-line">
 		<button
-			disabled={!selectable}
-			on:click={() => dispatch('selected', !selected)}
+			on:click={() => selectable && dispatch('selected', !selected)}
 			class="text-color-4 border-color-4 shrink-0 select-none border-r px-0.5 text-right text-xs {bgColor}"
 			style:min-width={minWidth + 'rem'}
+			style:cursor={draggingDisabled ? 'default' : 'grab'}
 		>
 			{line.beforeLineNumber || ''}
 		</button>
 		<button
-			disabled={!selectable}
-			on:click={() => dispatch('selected', !selected)}
+			on:click={() => selectable && dispatch('selected', !selected)}
 			class="text-color-4 border-color-4 shrink-0 select-none border-r px-0.5 text-right text-xs {bgColor}"
 			style:min-width={minWidth + 'rem'}
+			style:cursor={draggingDisabled ? 'default' : 'grab'}
 		>
 			{line.afterLineNumber || ''}
 		</button>
@@ -63,6 +64,7 @@
 		class:readonly
 		class:diff-line-deletion={sectionType === SectionType.RemovedLines}
 		class:diff-line-addition={sectionType === SectionType.AddedLines}
+		style:cursor={draggingDisabled ? 'default' : 'grab'}
 	>
 		<span class="selectable-wrapper" data-no-drag>
 			{@html toTokens(line.content).join('')}
@@ -82,9 +84,6 @@
 
 	.line {
 		flex-grow: 1;
-		&:not(.readonly) {
-			cursor: grab;
-		}
 	}
 
 	.code-line__numbers-line {

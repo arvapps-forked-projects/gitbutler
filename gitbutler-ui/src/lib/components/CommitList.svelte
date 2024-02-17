@@ -25,10 +25,13 @@
 	$: headCommit = branch.commits[0];
 
 	$: commits = type == 'upstream' ? [] : branch.commits.filter((c) => c.status == type);
+	$: hasCommits = commits && commits.length > 0;
+	$: remoteRequiresForcePush = type === 'remote' && branch.requiresForce;
+
 	let expanded = true;
 </script>
 
-{#if commits && commits.length > 0}
+{#if hasCommits || remoteRequiresForcePush}
 	<div
 		class="commit-list card"
 		class:upstream={type == 'upstream'}
@@ -82,7 +85,6 @@
 		background-color: var(--clr-theme-container-light);
 		display: flex;
 		flex-direction: column;
-		/* border-top: 1px solid var(--clr-theme-container-outline-light); */
 		position: relative;
 		flex-shrink: 0;
 	}

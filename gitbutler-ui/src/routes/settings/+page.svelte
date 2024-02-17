@@ -91,8 +91,8 @@
 	const setCommitterSetting = (value: boolean) => {
 		annotateCommits = value;
 		git_set_config({
-			key: 'gitbutler.utmostDiscretion',
-			value: value ? '0' : '1'
+			key: 'gitbutler.gitbutlerCommitter',
+			value: value ? '1' : '0'
 		});
 	};
 
@@ -116,12 +116,12 @@
 	$: annotateCommits = true;
 	$: signCommits = false;
 
-	git_get_config({ key: 'gitbutler.utmostDiscretion' }).then((value) => {
-		annotateCommits = value ? value === '0' : true;
+	git_get_config({ key: 'gitbutler.gitbutlerCommitter' }).then((value) => {
+		annotateCommits = value ? value === '1' : false;
 	});
 
 	git_get_config({ key: 'gitbutler.signCommits' }).then((value) => {
-		signCommits = value ? value === 'true' : true;
+		signCommits = value ? value === 'true' : false;
 	});
 
 	const onDeleteClicked = () =>
@@ -224,9 +224,9 @@
 						<p>Credit GitButler as the Committer</p>
 						<div class="space-y-2 pr-8 text-sm text-light-700 dark:text-dark-200">
 							<div>
-								By default, everything in the GitButler client is free to use, but we credit
-								ourselves as the committer in your virtual branch commits. Community members and
-								supporters of GitButler can turn this off.
+								By default, everything in the GitButler client is free to use. You can opt in to
+								crediting us as the committer in your virtual branch commits to help spread the
+								word.
 							</div>
 							<Link
 								target="_blank"
@@ -240,7 +240,6 @@
 					<div>
 						<Toggle
 							checked={annotateCommits}
-							disabled={!$user$?.supporter}
 							on:change={() => setCommitterSetting(!annotateCommits)}
 						/>
 					</div>
