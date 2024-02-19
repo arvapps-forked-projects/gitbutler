@@ -12,6 +12,7 @@
 	import { LocalFile, RemoteCommit, Commit, RemoteFile } from '$lib/vbranches/types';
 	import { writable, type Writable } from 'svelte/store';
 	import { slide } from 'svelte/transition';
+	import type { BranchController } from '$lib/vbranches/branchController';
 
 	export let commit: Commit | RemoteCommit;
 	export let projectId: string;
@@ -20,6 +21,7 @@
 	export let resetHeadCommit: () => void | undefined = () => undefined;
 	export let isUnapplied = false;
 	export let selectedFiles: Writable<(LocalFile | RemoteFile)[]>;
+	export let branchController: BranchController;
 	export let branchId: string | undefined = undefined;
 
 	const selectedOwnership = writable(Ownership.default());
@@ -92,6 +94,7 @@
 				{isUnapplied}
 				{selectedOwnership}
 				{selectedFiles}
+				{branchController}
 				allowMultiple={true}
 				readonly={true}
 			/>
@@ -131,9 +134,9 @@
 		overflow: hidden;
 		transition: background-color var(--transition-fast);
 
-		&:hover {
+		&:not(.is-commit-open):hover {
 			border: 1px solid
-				color-mix(in srgb, var(--clr-theme-container-outline-light), var(--darken-mid));
+				color-mix(in srgb, var(--clr-theme-container-outline-light), var(--darken-tint-mid));
 			background-color: color-mix(
 				in srgb,
 				var(--clr-theme-container-light),
@@ -153,7 +156,7 @@
 		background-color: color-mix(
 			in srgb,
 			var(--clr-theme-container-light),
-			var(--darken-tint-extralight)
+			var(--darken-tint-light)
 		);
 
 		& .commit__header {
@@ -163,7 +166,7 @@
 				background-color: color-mix(
 					in srgb,
 					var(--clr-theme-container-light),
-					var(--darken-tint-light)
+					var(--darken-tint-mid)
 				);
 			}
 		}
