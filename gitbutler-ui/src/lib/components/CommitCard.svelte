@@ -45,7 +45,7 @@
 
 <div
 	use:draggable={commit instanceof Commit
-		? draggableCommit(commit.branchId, commit)
+		? draggableCommit(commit.branchId, commit, isHeadCommit)
 		: nonDraggable()}
 	class="commit"
 	class:is-commit-open={showFiles}
@@ -223,6 +223,7 @@
 		width: 100%;
 		color: var(--clr-theme-scale-ntrl-40);
 		white-space: pre-line;
+		word-wrap: anywhere;
 	}
 
 	.commit__row {
