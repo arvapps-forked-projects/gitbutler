@@ -192,9 +192,6 @@ export class GitHubService {
 							posthog.capture('PR Successful');
 							return { pr: ghResponseToInstance(rsp.data) };
 						} catch (err: any) {
-							// TODO: Perhaps we should only capture part of the error object
-							posthog.capture('PR Failed', { error: err });
-
 							const toast = mapErrorToToast(err);
 							if (toast) {
 								// TODO: This needs disambiguation, not the same as `toasts.error`
@@ -217,6 +214,10 @@ export class GitHubService {
 				timeout(60000), // 60 second total timeout
 				catchError((err) => {
 					this.setIdle(branchId);
+
+					// TODO: Perhaps we should only capture part of the error object
+					posthog.capture('PR Failed', { error: err });
+
 					if (err instanceof TimeoutError) {
 						showToast({
 							title: 'Timed out while creating PR',
@@ -447,6 +448,53 @@ function loadPrs(
  *   status: 422
  * }
  * ```
+ *
+ * {
+ *   "name": "HttpError",
+ *   "request": {
+ *     "body": "{\"head\":\"Update-vscode-colors\",\"base\":\"C1-393-docker-implementation\",\"title\":\"Update vscode colors\",\"body\":\"\",\"draft\":false}",
+ *     "headers": {
+ *       "accept": "application/vnd.github.v3+json",
+ *       "authorization": "token [REDACTED]",
+ *       "content-type": "application/json; charset=utf-8",
+ *       "user-agent": "GitButler Client octokit-rest.js/20.0.2 octokit-core.js/5.0.1 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)"
+ *     },
+ *     "method": "POST",
+ *     "request": {
+ *       "hook": {}
+ *     },
+ *     "url": "https://api.github.com/repos/c1-ab/c1-backend/pulls"
+ *   },
+ *   "response": {
+ *     "data": {
+ *       "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request",
+ *       "errors": [
+ *         {
+ *           "code": "invalid",
+ *           "field": "base",
+ *           "resource": "PullRequest"
+ *         }
+ *       ],
+ *       "message": "Validation Failed"
+ *     },
+ *     "headers": {
+ *       "content-length": "186",
+ *       "content-type": "application/json; charset=utf-8",
+ *       "x-accepted-oauth-scopes": "",
+ *       "x-github-media-type": "github.v3; format=json",
+ *       "x-github-request-id": "E5EE:F1F0:6880D:6984F:65D74AC3",
+ *       "x-oauth-scopes": "repo",
+ *       "x-ratelimit-limit": "15000",
+ *       "x-ratelimit-remaining": "14950",
+ *       "x-ratelimit-reset": "1708609120",
+ *       "x-ratelimit-resource": "core",
+ *       "x-ratelimit-used": "50"
+ *     },
+ *     "status": 422,
+ *     "url": "https://api.github.com/repos/c1-ab/c1-backend/pulls"
+ *   },
+ *   "status": 422
+ * }
  */
 function mapErrorToToast(err: any): ToastMessage | undefined {
 	// We expect an object to be thrown by octokit.
@@ -492,12 +540,18 @@ function mapErrorToToast(err: any): ToastMessage | undefined {
 	if (message.includes('Validation Failed')) {
 		let errorStrings = '';
 		if (errors instanceof Array) {
-			errorStrings = errors.map((err) => err.message).join('\n');
+			errorStrings = errors
+				.map((err) => {
+					if (err.message) return err.message;
+					if (err.field && err.code) return `${err.field} ${err.code}`;
+					return 'unknown validation error';
+				})
+				.join('\n');
 		}
 		return {
 			title: 'GitHub validation failed',
 			message: `
-                It looks like OAuth access has been restricted by your organization.
+                It seems there was a problem validating the request.
 
                 Please see our [documentation](https://docs.gitbutler.com/)
                 for additional help.
